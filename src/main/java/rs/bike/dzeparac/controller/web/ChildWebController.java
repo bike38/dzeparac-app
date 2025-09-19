@@ -1,40 +1,38 @@
 package rs.bike.dzeparac.controller.web;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
+
 import rs.bike.dzeparac.model.Child;
+import rs.bike.dzeparac.model.Activity;
 import rs.bike.dzeparac.repository.ChildRepository;
+import rs.bike.dzeparac.repository.ActivityRepository;
+
 
 @Controller
-@RequestMapping("web/children")
+@RequestMapping("/web/child")
 public class ChildWebController {
 
-    private final ChildRepository childRepo;
+    private final ChildRepository childRepository;
 
-    public ChildWebController(ChildRepository childRepo) {
-        System.out.println("ChildWebController loaded");
-        this.childRepo = childRepo;
+    public ChildWebController(ChildRepository childRepository) {
+        this.childRepository = childRepository;
     }
 
-    @GetMapping
-    public String showChildren(Model model) {
-        model.addAttribute("children", childRepo.findAll());
-        return "children";
+    @GetMapping("/new")
+    public String showForm(Model model) {
+        model.addAttribute("content", "~{child-form :: content}");
+        return "layout";
     }
 
-    @GetMapping("/test")
-    @ResponseBody
-    public String test() {
-        return "Radi!";
-    }
-
-    @PostMapping
-    public String addChild(@RequestParam String name) {
+    @PostMapping("/save")
+    public String save(@RequestParam String name,
+                       @RequestParam(required = false) boolean active) {
         Child child = new Child();
         child.setName(name);
-        childRepo.save(child);
-        return "redirect:/web/children";
+        child.setActive(active);
+        childRepository.save(child);
+        return "redirect:/web/child/new";
     }
-
 }

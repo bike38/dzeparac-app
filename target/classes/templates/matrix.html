@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Matrica aktivnosti</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; overflow-x: auto; }
+        th, td { border: 1px solid #ccc; padding: 4px; text-align: center; }
+        th { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+<h2 th:text="'Aktivnosti za ' + ${child.name} + ' (' + ${year} + ')'"></h2>
+
+<table>
+    <thead>
+    <tr>
+        <th>Aktivnost</th>
+        <th th:each="i : ${#numbers.sequence(0, 51)}" th:text="'Ned ' + (i + 1)"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${matrix}">
+        <td th:text="${row.activity.name}"></td>
+        <td th:each="score, iStat : ${row.weeklyScores}">
+            <form th:action="@{/matrix/update}" method="post">
+                <input type="hidden" name="childId" th:value="${child.id}" />
+                <input type="hidden" name="activityId" th:value="${row.activity.id}" />
+                <input type="hidden" name="weekIndex" th:value="${iStat.index}" />
+                <input type="hidden" name="year" th:value="${year}" />
+                <input type="number" name="score" th:value="${score}" min="0" max="${row.activity.maxScore}" />
+                <button type="submit">✔</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<form th:action="@{/matrix/lock}" method="post">
+    <input type="hidden" name="childId" th:value="${child.id}" />
+    <input type="number" name="weekIndex" placeholder="Zaključi nedelju (0–51)" />
+    <input type="hidden" name="year" th:value="${year}" />
+    <button type="submit">Zaključi</button>
+</form>
+</body>
+</html>

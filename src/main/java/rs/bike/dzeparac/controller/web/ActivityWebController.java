@@ -1,41 +1,38 @@
 package rs.bike.dzeparac.controller.web;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
+
+import rs.bike.dzeparac.model.Child;
 import rs.bike.dzeparac.model.Activity;
-import rs.bike.dzeparac.model.ActivityType;
+import rs.bike.dzeparac.repository.ChildRepository;
 import rs.bike.dzeparac.repository.ActivityRepository;
 
+
 @Controller
-@RequestMapping("web/activities")
+@RequestMapping("/web/activity")
 public class ActivityWebController {
 
-    private final ActivityRepository activityRepo;
+    private final ActivityRepository activityRepository;
 
-    public ActivityWebController(ActivityRepository activityRepo) {
-        this.activityRepo = activityRepo;
+    public ActivityWebController(ActivityRepository activityRepository) {
+        this.activityRepository = activityRepository;
     }
 
-    @GetMapping
-    public String showActivities(Model model) {
-        model.addAttribute("activities", activityRepo.findAll());
-        return "activities";
+    @GetMapping("/new")
+    public String showForm(Model model) {
+        model.addAttribute("content", "activity-form");
+        return "layout";
     }
 
-    @PostMapping
-    public String addActivity(@RequestParam String name,
-                              @RequestParam String description,
-                              @RequestParam int maxPoints,
-                              @RequestParam ActivityType type,
-                              @RequestParam(required = false) boolean activeThisWeek) {
+    @PostMapping("/save")
+    public String save(@RequestParam String name,
+                       @RequestParam int maxScore) {
         Activity activity = new Activity();
         activity.setName(name);
-        activity.setDescription(description);
-        activity.setMaxPoints(maxPoints);
-        activity.setType(type);
-        activity.setActiveThisWeek(activeThisWeek);
-        activityRepo.save(activity);
-        return "redirect:web/activities";
+        activity.setMaxScore(maxScore);
+        activityRepository.save(activity);
+        return "redirect:web/activity/new";
     }
 }

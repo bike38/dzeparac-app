@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="content">
+<body>
+<h2>Unos novog deteta</h2>
+<form th:action="@{/web/child/save}" method="post">
+    <label>Ime:</label>
+    <input type="text" name="name" required />
+    <br/>
+    <label>Aktivno:</label>
+    <input type="checkbox" name="active" checked />
+    <br/>
+    <button type="submit">Sačuvaj</button>
+</form>
+</body>
+</html>

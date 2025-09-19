@@ -83,15 +83,15 @@
             <li>
                 <span>📁 Шифарници</span>
                 <ul>
-                    <li><a th:href="@{/web/code/activities}">Активности</a></li>
-                    <li><a th:href="@{/web/code/persons}">Деца</a></li>
+                    <li><a th:href="@{/web/activity/new}">Активности</a></li>
+                    <li><a th:href="@{/web/child/new}">Деца</a></li>
                 </ul>
             </li>
         </ul>
     </nav>
 </header>
 
-<main th:replace="index :: contentFragment"></main>
+<main th:replace="${content}"></main>
 
 <footer style="
   position: fixed;

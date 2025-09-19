@@ -11,6 +11,8 @@ public class Child extends Auditable{
 
     private String name;
 
+    private boolean active;
+
     public Child() {}
 
     public Child(String name) {
@@ -26,5 +28,13 @@ public class Child extends Auditable{
     @Override
     public String toString() {
         return "Child{id=" + id + ", name='" + name + "'}";
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

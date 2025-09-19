@@ -3,7 +3,7 @@ package rs.bike.dzeparac.model;
 import jakarta.persistence.*;
 
 @Entity
-public class Activity extends Auditable{
+public class Activity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -11,23 +11,21 @@ public class Activity extends Auditable{
 
     private String name;
     private String description;
-
-    private Integer maxPoints; // npr. 40 za školu, 10 za zube
+    private int maxScore;
 
     @Enumerated(EnumType.STRING)
-    private ActivityType type; // OSNOVNA, DODATNA, TIMSKA
-
-    private Boolean activeThisWeek;
+    private ActivityType type;
 
     public Activity() {}
 
-    public Activity(String name, String description, Integer maxPoints, ActivityType type, Boolean activeThisWeek) {
+    public Activity(String name, String description, int maxScore, ActivityType type) {
         this.name = name;
         this.description = description;
-        this.maxPoints = maxPoints;
+        this.maxScore = maxScore;
         this.type = type;
-        this.activeThisWeek = activeThisWeek;
     }
+
+    // Getteri i setteri
 
     public Long getId() { return id; }
 
@@ -39,20 +37,16 @@ public class Activity extends Auditable{
 
     public void setDescription(String description) { this.description = description; }
 
-    public Integer getMaxPoints() { return maxPoints; }
+    public int getMaxScore() { return maxScore; }
 
-    public void setMaxPoints(Integer maxPoints) { this.maxPoints = maxPoints; }
+    public void setMaxScore(int maxScore) { this.maxScore = maxScore; }
 
     public ActivityType getType() { return type; }
 
     public void setType(ActivityType type) { this.type = type; }
 
-    public Boolean getActiveThisWeek() { return activeThisWeek; }
-
-    public void setActiveThisWeek(Boolean activeThisWeek) { this.activeThisWeek = activeThisWeek; }
-
-    @Override
-    public String toString() {
-        return "Activity{id=" + id + ", name='" + name + "', maxPoints=" + maxPoints + ", type=" + type + ", activeThisWeek=" + activeThisWeek + "}";
+    public int getMaxPoints() {
+        return this.maxScore;
     }
+
 }
