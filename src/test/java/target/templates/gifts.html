@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <title>Unos poklona</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<h2>Dodaj poklon</h2>
+
+<form th:action="@{/gifts}" method="post">
+    <div>
+        <label for="childId">Dete:</label>
+        <select id="childId" name="childId" required>
+            <option th:each="child : ${children}" th:value="${child.id}" th:text="${child.name}"></option>
+        </select>
+    </div>
+
+    <div>
+        <label for="source">Izvor:</label>
+        <input type="text" id="source" name="source" placeholder="Baka, rođendan..." required />
+    </div>
+
+    <div>
+        <label for="amount">Iznos:</label>
+        <input type="number" id="amount" name="amount" min="0" step="1" required />
+    </div>
+
+    <div>
+        <label for="note">Napomena:</label>
+        <input type="text" id="note" name="note" />
+    </div>
+
+    <div>
+        <label for="date">Datum:</label>
+        <input type="date" id="date" name="date" required />
+    </div>
+
+    <button type="submit">Dodaj poklon</button>
+</form>
+
+<hr/>
+
+<h3>Pregled poklona</h3>
+<table>
+    <thead>
+    <tr>
+        <th>Dete</th>
+        <th>Izvor</th>
+        <th>Iznos</th>
+        <th>Napomena</th>
+        <th>Datum</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="gift : ${gifts}">
+        <td th:text="${gift.child.name}"></td>
+        <td th:text="${gift.source}"></td>
+        <td th:text="${gift.amount}"></td>
+        <td th:text="${gift.note}"></td>
+        <td th:text="${gift.date}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

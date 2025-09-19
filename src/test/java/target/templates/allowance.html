@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="sr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Džeparac</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<h2>Džeparac za nedelju</h2>
+<form th:action="@{/allowance}" method="get">
+    <input type="number" name="childId" placeholder="ID deteta" required />
+    <input type="date" name="start" required />
+    <input type="date" name="end" required />
+    <button type="submit">Izračunaj</button>
+</form>
+
+<h3>Rezultat</h3>
+<p th:if="${amount != null}">Ukupan džeparac: <strong th:text="${amount} + ' dinara'"></strong></p>
+</body>
+</html>

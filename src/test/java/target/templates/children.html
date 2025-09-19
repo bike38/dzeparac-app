@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="sr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Deca</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<h2>Unos deteta</h2>
+<form th:action="@{/web/children}" method="post">
+    <input type="text" name="name" placeholder="Ime deteta" required />
+    <button type="submit">Dodaj</button>
+</form>
+
+<h3>Pregled dece</h3>
+<table>
+    <thead><tr><th>ID</th><th>Ime</th></tr></thead>
+    <tbody>
+    <tr th:each="child : ${children}">
+        <td th:text="${child.id}"></td>
+        <td th:text="${child.name}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

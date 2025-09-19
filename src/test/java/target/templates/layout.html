@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Allowance App</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<header>OVO JE HEADER</header>
+
+<nav>
+    <a th:href="@{/web/index}">Index</a> |
+    <a th:href="@{/web/scores}">Scores</a>
+</nav>
+
+<main th:replace="~{index :: contentFragment}"></main>
+
+<footer>OVO JE FOOTER</footer>
+</body>
+</html>

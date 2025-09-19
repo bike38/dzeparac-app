@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="sr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Kazne i nagrade</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<h2>Unos kazne ili nagrade</h2>
+<form th:action="@{/adjustments}" method="post">
+    <select name="type">
+        <option value="REWARD">Nagrada</option>
+        <option value="PENALTY">Kazna</option>
+    </select>
+    <input type="text" name="description" placeholder="Opis" required />
+    <input type="number" name="amount" placeholder="Iznos" required />
+    <input type="date" name="date" required />
+    <button type="submit">Upiši</button>
+</form>
+
+<h3>Pregled</h3>
+<table>
+    <thead><tr><th>Tip</th><th>Opis</th><th>Iznos</th><th>Datum</th></tr></thead>
+    <tbody>
+    <tr th:each="item : ${adjustments}">
+        <td th:text="${item.type}"></td>
+        <td th:text="${item.description}"></td>
+        <td th:text="${item.amount}"></td>
+        <td th:text="${item.date}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

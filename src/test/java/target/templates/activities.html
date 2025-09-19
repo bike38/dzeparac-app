@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="sr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Aktivnosti</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<h2>Šifarnik aktivnosti</h2>
+<form th:action="@{/activities}" method="post">
+    <input type="text" name="name" placeholder="Naziv" required />
+    <input type="text" name="description" placeholder="Opis" />
+    <input type="number" name="maxPoints" placeholder="Max poeni" required />
+    <select name="type">
+        <option value="OSNOVNA">Osnovna</option>
+        <option value="DODATNA">Dodatna</option>
+        <option value="TIMSKA">Timska</option>
+    </select>
+    <label><input type="checkbox" name="activeThisWeek" /> Aktivna ove nedelje</label>
+    <button type="submit">Dodaj</button>
+</form>
+
+<h3>Pregled aktivnosti</h3>
+<table>
+    <thead><tr><th>Naziv</th><th>Tip</th><th>Max</th><th>Aktivna</th></tr></thead>
+    <tbody>
+    <tr th:each="activity : ${activities}">
+        <td th:text="${activity.name}"></td>
+        <td th:text="${activity.type}"></td>
+        <td th:text="${activity.maxPoints}"></td>
+        <td th:text="${activity.activeThisWeek} ? 'Da' : 'Ne'"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

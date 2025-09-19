@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Nedeljni pregled</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+</head>
+<body>
+<header>
+    <h1>Allowance App</h1>
+</header>
+
+<div class="container">
+    <nav class="sidebar">
+        <ul>
+            <li><a th:href="@{/web/weeks(childId=${selectedChild?.id})}">📅 Nedeljni pregled</a></li>
+            <li>
+                <span>📝 Unos</span>
+                <ul>
+                    <li><a th:href="@{/web/scores(childId=${selectedChild?.id})}">Ocene aktivnosti</a></li>
+                    <li><a th:href="@{/web/adjustments}">Kazne i nagrade</a></li>
+                    <li><a th:href="@{/web/gifts}">Pokloni</a></li>
+                </ul>
+            </li>
+            <li>
+                <span>⚙️ Šifarnici</span>
+                <ul>
+                    <li><a th:href="@{/web/children}">Deca</a></li>
+                    <li><a th:href="@{/web/activities}">Aktivnosti</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <h2>Nedeljni pregled</h2>
+
+        <form method="get" th:action="@{/web/weeks}">
+            <label for="childId">Izaberi dete:</label>
+            <select name="childId" id="childId">
+                <option th:each="c : ${children}"
+                        th:value="${c.id}"
+                        th:text="${c.name}"
+                        th:selected="${selectedChild != null and c.id == selectedChild.id}">
+                </option>
+            </select>
+            <button type="submit">Prikaži</button>
+        </form>
+
+        <div th:if="${weeklyScores != null}">
+            <tr th:each="entry : ${weeklyScores.entrySet()}">
+            <h3 th:text="'Nedelja od ' + ${#temporals.format(entry.key, 'dd.MM.yyyy')}"></h3>
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Aktivnost</th>
+                        <th>Ocena</th>
+                        <th>Kazna/Nagrada</th>
+                        <th>Poklon</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="activity : ${activities}">
+                        <td th:text="${activity.name}"></td>
+                        <td th:text="${entry.value[activity]?.value != null ? entry.value[activity].value : '-'}"></td>
+                        <td>
+                                <span th:if="${entry.value[activity]?.penalty != null}"
+                                      th:text="'Kazna: ' + ${entry.value[activity].penalty.description}"></span>
+                            <span th:if="${entry.value[activity]?.reward != null}"
+                                  th:text="'Nagrada: ' + ${entry.value[activity].reward.description}"></span>
+                            <span th:if="${entry.value[activity]?.penalty == null and entry.value[activity]?.reward == null}">-</span>
+                        </td>
+                        <td th:text="${entry.value[activity]?.gift?.name != null ? entry.value[activity].gift.name : '-'}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div class="allowance">
+                    <h4>Džeparac</h4>
+                    <p th:text="'Ukupno: ' + ${weeklyAllowanceTotals[entry.key]} + ' RSD'"></p>
+                </div>
+
+                <hr />
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
