@@ -3,12 +3,10 @@ package rs.bike.dzeparac.controller.web;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import rs.bike.dzeparac.dto.ScoreMatrixRow;
 import rs.bike.dzeparac.model.Child;
-import rs.bike.dzeparac.model.WeeklyScore;
 import rs.bike.dzeparac.repository.ChildRepository;
-import rs.bike.dzeparac.repository.WeeklyScoreRepository;
 import rs.bike.dzeparac.service.ScoreMatrixService;
+import rs.bike.dzeparac.dto.ScoreRow;
 
 import java.util.List;
 
@@ -18,14 +16,11 @@ public class ScoreMatrixController {
 
     private final ScoreMatrixService scoreMatrixService;
     private final ChildRepository childRepository;
-    private final WeeklyScoreRepository weeklyScoreRepository;
 
     public ScoreMatrixController(ScoreMatrixService scoreMatrixService,
-                                 ChildRepository childRepository,
-                                 WeeklyScoreRepository weeklyScoreRepository) {
+                                 ChildRepository childRepository) {
         this.scoreMatrixService = scoreMatrixService;
         this.childRepository = childRepository;
-        this.weeklyScoreRepository = weeklyScoreRepository;
     }
 
     @GetMapping("/{childId}/{year}")
@@ -33,7 +28,7 @@ public class ScoreMatrixController {
                              @PathVariable int year,
                              Model model) {
         Child child = childRepository.findById(childId).orElseThrow();
-        List<ScoreMatrixRow> matrix = scoreMatrixService.getMatrixForChildAndYear(child, year);
+        List<ScoreRow> matrix = scoreMatrixService.getMatrix(child, year);
 
         model.addAttribute("child", child);
         model.addAttribute("year", year);

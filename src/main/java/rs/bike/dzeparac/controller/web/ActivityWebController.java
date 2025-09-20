@@ -4,9 +4,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.ui.Model;
 
-import rs.bike.dzeparac.model.Child;
 import rs.bike.dzeparac.model.Activity;
-import rs.bike.dzeparac.repository.ChildRepository;
 import rs.bike.dzeparac.repository.ActivityRepository;
 
 
@@ -21,18 +19,35 @@ public class ActivityWebController {
     }
 
     @GetMapping("/new")
-    public String showForm(Model model) {
-        model.addAttribute("content", "activity-form");
-        return "layout";
+    public String showForm(@RequestParam(required = false) Long id, Model model) {
+        if (id != null) {
+            Activity activity = activityRepository.findById(id).orElse(null);
+            if (activity != null) {
+                model.addAttribute("editId", activity.getId());
+                model.addAttribute("name", activity.getName());
+                model.addAttribute("maxScore", activity.getMaxScore());
+            }
+        }
+        model.addAttribute("activities", activityRepository.findAll());
+        return "activity-form";
     }
 
     @PostMapping("/save")
-    public String save(@RequestParam String name,
+    public String save(@RequestParam(required = false) Long id,
+                       @RequestParam String name,
                        @RequestParam int maxScore) {
-        Activity activity = new Activity();
+        Activity activity = (id != null)
+                ? activityRepository.findById(id).orElse(new Activity())
+                : new Activity();
         activity.setName(name);
         activity.setMaxScore(maxScore);
         activityRepository.save(activity);
-        return "redirect:web/activity/new";
+        return "redirect:/web/activity/new";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String delete(@PathVariable Long id) {
+        activityRepository.deleteById(id);
+        return "redirect:/web/activity/new";
     }
 }
