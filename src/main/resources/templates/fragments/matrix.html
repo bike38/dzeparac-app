@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="matrixTable(rows, childId, bgColor, headerColor)">
+    <div style="overflow:auto; max-height:30rem; border:2px solid #aaa; margin-bottom:2rem;">
+        <table style="border-collapse:collapse; background:#[[${bgColor}]]; font-size:0.8rem; text-align:center; width:max-content; min-width:100%;">
+            <thead>
+            <tr style="background:#[[${headerColor}]];">
+                <th style="border:1px solid #aaa; min-width:12rem; position:sticky; left:0; background:#[[${headerColor}]]; z-index:3;">Активност</th>
+                <th style="border:1px solid #aaa; min-width:16rem; position:sticky; left:12rem; background:#[[${headerColor}]]; z-index:3;">Опис</th>
+                <th style="border:1px solid #aaa; min-width:6rem; position:sticky; left:28rem; background:#[[${headerColor}]]; z-index:3;">Макс.</th>
+                <th th:each="weekNum : ${#numbers.sequence(1,52)}" th:text="'Н' + weekNum" style="border:1px solid #aaa; min-width:6rem;"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <td style="position:sticky; left:0; background:#f8fff8; z-index:2;" th:text="${row.activity.name}"></td>
+                <td style="position:sticky; left:12rem; background:#f8fff8; z-index:2;" th:text="${row.activity.description}"></td>
+                <td style="position:sticky; left:28rem; background:#f8fff8; z-index:2;" th:text="${row.activity.maxScore}"></td>
+                <td th:each="score, iterStat : ${row.weeklyScores}" style="min-width:6rem;">
+                    <input type="number"
+                           th:value="${score}"
+                           th:attr="data-week=${iterStat.index}, data-activity=${row.activity.id}"
+                           style="width:4rem;" />
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</th:block>
+</body>
+</html>

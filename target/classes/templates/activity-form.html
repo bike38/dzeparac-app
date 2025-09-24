@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout('Унос активности', ~{::.main-container})}" xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+<div class="main-container">
+
+    <h2 th:text="${activity.id != null ? '✏️ Измена активности' : '➕ Унос нове активности'}"></h2>
+
+    <form th:action="@{/web/activity/save}" th:object="${activity}" method="post" style="margin-bottom:2rem;">
+        <input type="hidden" th:field="*{id}" />
+
+        <label>Назив:</label>
+        <input type="text" th:field="*{name}" required />
+
+        <label>Макс. поена:</label>
+        <input type="number" th:field="*{maxScore}" min="1" required />
+
+        <label>Тип активности:</label>
+        <select th:field="*{type}" required>
+            <option th:each="t : ${types}" th:value="${t}" th:text="${t}"></option>
+        </select>
+
+        <button type="submit" th:text="${activity.id != null ? 'Ажурирај' : 'Сачувај'}"></button>
+        <a th:if="${activity.id != null}" th:href="@{/web/activity/new}" style="margin-left:1rem;">↩️ Откажи</a>
+    </form>
+
+    <h3>📋 Већ унето</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+        <thead style="background:#eef;">
+        <tr>
+            <th style="border:1px solid #aaa; padding:0.5rem;">Назив</th>
+            <th style="border:1px solid #aaa; padding:0.5rem;">Макс.</th>
+            <th style="border:1px solid #aaa; padding:0.5rem;">Тип</th>
+            <th style="border:1px solid #aaa; padding:0.5rem;">Акције</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${activities}">
+            <td style="border:1px solid #aaa; padding:0.5rem;" th:text="${a.name}"></td>
+            <td style="border:1px solid #aaa; padding:0.5rem;" th:text="${a.maxScore}"></td>
+            <td style="border:1px solid #aaa; padding:0.5rem;" th:text="${a.type}"></td>
+            <td style="border:1px solid #aaa; padding:0.5rem;">
+                <a th:href="@{'/web/activity/new?id=' + ${a.id}}" style="margin-right:0.5rem;">✏️</a>
+                <a th:href="@{'/web/activity/delete/' + ${a.id}}" onclick="return confirm('Да ли сте сигурни?')">🗑️</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

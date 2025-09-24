@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="sr" th:fragment="layout (title, content)" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${title}">Џепарац Апликација</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; }
+        header {
+            background-color: navy;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .app-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 1.5rem;
+        }
+        nav li {
+            position: relative;
+        }
+        nav a, nav span {
+            color: white;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        nav li:hover ul {
+            display: block;
+        }
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #001f4d;
+            padding: 0.5rem;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+        nav ul ul li {
+            padding: 0.3rem 0.6rem;
+        }
+        nav ul ul a {
+            font-size: 0.85rem;
+        }
+        footer {
+            background-color: gray;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="app-title">ЏЕПАРАЦ АПЛИКАЦИЈА</div>
+    <nav>
+        <ul>
+            <li><a th:href="@{/web/index}">🏠 Почетна</a></li>
+            <li><a th:href="@{/web/weeks?childId=1}">📅 Недељни преглед</a></li>
+            <li>
+                <span>📝 Унос</span>
+                <ul>
+                    <li><a th:href="@{/web/scores?childId=1}">Оцене активности</a></li>
+                    <li><a th:href="@{/web/adjustments}">Казне и награде</a></li>
+                    <li><a th:href="@{/web/gifts}">Поклони</a></li>
+                </ul>
+            </li>
+            <li>
+                <span>📁 Шифарници</span>
+                <ul>
+                    <li><a th:href="@{/web/activity/new}">Активности</a></li>
+                    <li><a th:href="@{/web/child/new}">Деца</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main>
+    <div th:replace="${content}"></div>
+</main>
+
+<footer style="
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: gray;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  z-index: 100;">
+    &copy; 2025 Џепарац Апликација — Сви права задржана
+</footer>
+
+</body>
+</html>

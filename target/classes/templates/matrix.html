@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout('Матрица оцена', ~{::.main-container})}" xmlns:th="http://www.thymeleaf.org">
+<head/>
+<body>
+<div class="main-container">
+
+    <h2>📅 Матрица оцена — <span th:text="${child.name}"></span>, <span th:text="${year}"></span>. година</h2>
+
+    <!-- 📝 Форма за унос оцене -->
+    <form th:action="@{/matrix/update}" method="post" style="margin-bottom:2rem;">
+        <input type="hidden" name="childId" th:value="${child.id}" />
+        <input type="hidden" name="year" th:value="${year}" />
+
+        <label>Активност:</label>
+        <select name="activityId" required>
+            <option th:each="row : ${matrix}"
+                    th:value="${row.activity.id}"
+                    th:text="${row.activity.name}">
+            </option>
+        </select>
+
+        <label>Недеља:</label>
+        <input type="number" name="weekIndex" min="0" max="51" required />
+
+        <label>Оцена:</label>
+        <input type="number" name="score" min="0" required />
+
+        <button type="submit">✅ Унеси</button>
+    </form>
+
+    <!-- 🔒 Форма за закључавање недеље -->
+    <form th:action="@{/matrix/lock}" method="post" style="margin-bottom:2rem;">
+        <input type="hidden" name="childId" th:value="${child.id}" />
+        <input type="hidden" name="year" th:value="${year}" />
+
+        <label>Закључај недељу:</label>
+        <input type="number" name="weekIndex" min="0" max="51" required />
+        <button type="submit">🔒 Закључај</button>
+    </form>
+
+    <!-- 📊 Табела оцена -->
+    <div style="overflow:auto; max-height:30rem; border:2px solid #aaa;">
+        <table style="
+            border-collapse:collapse;
+            background:#e6ffe6;
+            font-size:0.8rem;
+            text-align:center;
+            width:max-content;
+            min-width:100%;">
+            <thead>
+            <tr style="background:#cceccc;">
+                <th style="border:1px solid #aaa; min-width:12rem; position:sticky; left:0; background:#cceccc; z-index:2;">Активност</th>
+                <th style="border:1px solid #aaa; min-width:16rem; position:sticky; left:12rem; background:#cceccc; z-index:2;">Опис</th>
+                <th style="border:1px solid #aaa; min-width:6rem; position:sticky; left:28rem; background:#cceccc; z-index:2;">Макс.</th>
+                <th th:each="weekNum : ${#numbers.sequence(1,52)}"
+                    th:text="'Н' + weekNum"
+                    style="border:1px solid #aaa; min-width:6rem;">
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${matrix}">
+                <td style="border:1px solid #aaa; text-align:left; min-width:12rem; position:sticky; left:0; background:#f8fff8;" th:text="${row.activity.name}"></td>
+                <td style="border:1px solid #aaa; text-align:left; min-width:16rem; position:sticky; left:12rem; background:#f8fff8;" th:text="${row.activity.description}"></td>
+                <td style="border:1px solid #aaa; min-width:6rem; position:sticky; left:28rem; background:#f8fff8;" th:text="${row.activity.maxScore}"></td>
+                <td th:each="score : ${row.weeklyScores}"
+                    style="border:1px solid #aaa; min-width:6rem;"
+                    th:text="${score}">
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>

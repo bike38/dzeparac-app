@@ -1,7 +1,6 @@
 package rs.bike.dzeparac.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
 
 @Entity
 public class Allowance {
@@ -13,16 +12,17 @@ public class Allowance {
     @ManyToOne
     private Child child;
 
+    private int weekIndex;
     private int amount;
-
-    private LocalDate date;
+    private int schoolYear;
 
     public Allowance() {}
 
-    public Allowance(Child child, int amount, LocalDate date) {
+    public Allowance(Child child, int weekIndex, int amount, int schoolYear) {
         this.child = child;
+        this.weekIndex = weekIndex;
         this.amount = amount;
-        this.date = date;
+        this.schoolYear = schoolYear;
     }
 
     public Long getId() { return id; }
@@ -31,22 +31,15 @@ public class Allowance {
 
     public void setChild(Child child) { this.child = child; }
 
+    public int getWeekIndex() { return weekIndex; }
+
+    public void setWeekIndex(int weekIndex) { this.weekIndex = weekIndex; }
+
     public int getAmount() { return amount; }
 
     public void setAmount(int amount) { this.amount = amount; }
 
-    public LocalDate getDate() { return date; }
+    public int getSchoolYear() { return schoolYear; }
 
-    public void setDate(LocalDate date) { this.date = date; }
-
-    private int weekIndex;
-
-    public int getWeekIndex() {
-        return weekIndex;
-    }
-
-    public void setWeekIndex(int weekIndex) {
-        this.weekIndex = weekIndex;
-    }
-
+    public void setSchoolYear(int schoolYear) { this.schoolYear = schoolYear; }
 }

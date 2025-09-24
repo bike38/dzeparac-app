@@ -36,7 +36,7 @@ public class WeeksWebController {
 
         model.addAttribute("children", children);
         model.addAttribute("selectedChildId", selectedChild != null ? selectedChild.getId() : null);
-        model.addAttribute("scoreMatrix", selectedChild != null ? scoreMatrixService.getMatrix(selectedChild, 2025) : Collections.emptyList());
+        model.addAttribute("scoreMatrix", selectedChild != null ? scoreMatrixService.getMatrixForChildAndYear(selectedChild, 2025) : Collections.emptyList());
 
         return "weeks";
     }

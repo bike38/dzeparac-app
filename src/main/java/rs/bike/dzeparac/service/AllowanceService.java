@@ -5,48 +5,54 @@ import rs.bike.dzeparac.model.Allowance;
 import rs.bike.dzeparac.model.Child;
 import rs.bike.dzeparac.model.WeeklyScore;
 import rs.bike.dzeparac.repository.AllowanceRepository;
-import rs.bike.dzeparac.repository.WeeklyScoreRepository;
+import rs.bike.dzeparac.repository.ChildRepository;
+import rs.bike.dzeparac.service.WeeklyScoreService;
 
 import java.util.List;
 
 @Service
 public class AllowanceService {
 
+    private final WeeklyScoreService weeklyScoreService;
+    private final ChildRepository childRepository;
     private final AllowanceRepository allowanceRepository;
-    private final WeeklyScoreRepository weeklyScoreRepository;
 
-    public AllowanceService(AllowanceRepository allowanceRepository,
-                            WeeklyScoreRepository weeklyScoreRepository) {
+    public AllowanceService(WeeklyScoreService weeklyScoreService,
+                            ChildRepository childRepository,
+                            AllowanceRepository allowanceRepository) {
+        this.weeklyScoreService = weeklyScoreService;
+        this.childRepository = childRepository;
         this.allowanceRepository = allowanceRepository;
-        this.weeklyScoreRepository = weeklyScoreRepository;
     }
 
-    public int calculateTotalPoints(Long childId, int startWeek, int endWeek) {
-        List<WeeklyScore> scores = weeklyScoreRepository.findByChildIdAndWeekIndexBetween(childId, startWeek, endWeek);
-        return scores.stream()
-                .mapToInt(WeeklyScore::getScore)
-                .sum();
+    public int calculateWeeklyTotal(Long childId, int weekIndex) {
+        List<WeeklyScore> scores = weeklyScoreService.getScoresInRange(childId, weekIndex, weekIndex);
+        return scores.stream().mapToInt(WeeklyScore::getScore).sum();
     }
 
-    public int calculateMaxPoints(Long childId, int startWeek, int endWeek) {
-        List<WeeklyScore> scores = weeklyScoreRepository.findByChildIdAndWeekIndexBetween(childId, startWeek, endWeek);
-        return scores.stream()
-                .mapToInt(ws -> ws.getActivity().getMaxScore())
-                .sum();
+    public int calculateAllowance(int subtotal, int baseAmount) {
+        return subtotal >= 100 ? baseAmount : (subtotal * baseAmount / 100);
     }
 
-    public int calculateWeeklyAllowance(Long childId, int startWeek, int endWeek) {
-        int total = calculateTotalPoints(childId, startWeek, endWeek);
-        int max = calculateMaxPoints(childId, startWeek, endWeek);
-        if (max == 0) return 0;
-        return (int) Math.round((double) total / max * 100); // primer: procenat
+    public int calculateWeeklyAllowance(Long childId, int weekIndex, int baseAmount) {
+        int subtotal = calculateWeeklyTotal(childId, weekIndex);
+        return calculateAllowance(subtotal, baseAmount);
     }
 
-    public void saveAllowance(Child child, int amount, int weekIndex) {
+    public void lockWeek(Long childId, int weekIndex, int schoolYear) {
+        weeklyScoreService.lockWeek(childId, weekIndex, schoolYear);
+    }
+
+    public Child getChild(Long childId) {
+        return childRepository.findById(childId).orElseThrow();
+    }
+
+    public void saveAllowance(Child child, int weekIndex, int amount) {
         Allowance allowance = new Allowance();
         allowance.setChild(child);
-        allowance.setAmount(amount);
         allowance.setWeekIndex(weekIndex);
+        allowance.setAmount(amount);
+        allowance.setSchoolYear(2025); // ili dinamički
         allowanceRepository.save(allowance);
     }
 }

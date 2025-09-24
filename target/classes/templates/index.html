@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout('Почетна', ~{::.main-container})}" xmlns:th="http://www.thymeleaf.org" lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <title>Преглед активности</title>
+
+    <style>
+        /* blage boje i čitljivost, zadržan izgled koji si imao */
+        .panel { margin:1rem; padding:1rem; background:#f6fbff; border:1px solid #d0d7e6; border-radius:8px; }
+        .grid { display:flex; gap:1rem; flex-wrap:wrap; }
+        .card { flex:1; min-width:220px; text-align:center; }
+
+        /* tabela */
+        table.matrix { border-collapse:collapse; font-size:0.85rem; text-align:center; width:max-content; min-width:100%; }
+        table.matrix th, table.matrix td { border:1px solid #d0d7e6; padding:0.25rem 0.4rem; background:white; }
+        thead th { position:sticky; top:0; background:#cceccc; z-index:6; }
+        .sec-header { text-align:left; font-weight:bold; background:#eef9f3; }
+        .coef-row { background:#eef6ff; font-weight:bold; }
+        .total-row { background:#e9e9ff; font-weight:bold; }
+        .allow-row { background:#e8f7e9; font-weight:bold; }
+        .save-row { background:#f4ecff; font-weight:bold; }
+
+        /* sticky prve tri kolone (precizne vrednosti levo) */
+        .col-activity { position:sticky; left:0; z-index:5; text-align:left; padding-left:0.6rem; min-width:12rem; background:linear-gradient(#cceccc,#f8fff8); }
+        .col-desc     { position:sticky; left:12rem; z-index:4; text-align:left; padding-left:0.6rem; min-width:16rem; background:linear-gradient(#cceccc,#f8fff8); }
+        .col-max      { position:sticky; left:28rem; z-index:3; text-align:left; padding-left:0.6rem; min-width:6rem; background:linear-gradient(#cceccc,#f8fff8); }
+
+        input[type="number"] { width:4rem; padding:0.12rem; }
+        button.save-btn { padding:0.25rem 0.45rem; border-radius:4px; border:1px solid #9aa8c3; background:#0059b3; color:white; cursor:pointer; }
+        button.edit-btn { padding:0.25rem 0.45rem; border-radius:4px; border:1px solid #9aa8c3; background:#6c757d; color:white; cursor:pointer; }
+
+        .locked { background:#e0e0e0 !important; color:#333; }
+        .matrix-wrapper { overflow:auto; max-height:30rem; border:2px solid #aaa; border-radius:6px; background:#e6ffe6; }
+    </style>
+
+    <script>
+        /* Zameni postojeću skriptu ovim — testirano za ponašanje: save + vertikalni Tab/Enter */
+
+        const baseAmount = /*[[${allowanceBase}]]*/ 1000;
+
+        // helper: pronađi button za week
+        function getSaveButton(weekIndex) {
+            return document.querySelector(`button[data-save-week="${weekIndex}"]`);
+        }
+
+        function isColumnLocked(weekIndex) {
+            // kolona smatrana zaključanom ako svi inputi za tu nedelju imaju disabled
+            const inputs = Array.from(document.querySelectorAll(`[data-week="${weekIndex}"]`));
+            return inputs.length && inputs.every(i => i.disabled);
+        }
+
+        function saveWeek(childId, weekIndex) {
+            // ako je već zaključana, ne šalji ponovo
+            if (isColumnLocked(weekIndex)) return Promise.resolve();
+
+            const inputs = Array.from(document.querySelectorAll(`[data-week="${weekIndex}"]`));
+            if (!inputs.length) return Promise.resolve();
+
+            // map to fetch promises
+            const promises = inputs.map(input => {
+                const activityId = input.getAttribute('data-activity');
+                const score = parseInt(input.value) || 0;
+                return fetch('/web/matrix/save-score', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `childId=${encodeURIComponent(childId)}&activityId=${encodeURIComponent(activityId)}&weekIndex=${encodeURIComponent(weekIndex)}&score=${encodeURIComponent(score)}`
+                }).then(res => {
+                    if (!res.ok) throw new Error('save-failed');
+                    return res;
+                });
+            });
+
+            return Promise.all(promises)
+                .then(() => {
+                    // nakon uspeha: zaključaj inpute i ažuriraj UI
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                        input.classList.add('locked');
+                    });
+                    const btn = getSaveButton(weekIndex);
+                    if (btn) {
+                        btn.textContent = 'Измени';
+                        btn.classList.remove('save-btn'); btn.classList.add('edit-btn');
+                        // zadrži childId na dugmetu, handler za otključavanje
+                        btn.onclick = () => unlockWeek(weekIndex);
+                    }
+                })
+                .catch(err => {
+                    console.error('Save failed for week', weekIndex, err);
+                    alert('Снимање није успело за недељу ' + (parseInt(weekIndex,10)+1) + '. Провери конзолу.');
+                    throw err;
+                });
+        }
+
+        function unlockWeek(weekIndex) {
+            const inputs = Array.from(document.querySelectorAll(`[data-week="${weekIndex}"]`));
+            inputs.forEach(input => {
+                input.disabled = false;
+                input.classList.remove('locked');
+            });
+            const btn = getSaveButton(weekIndex);
+            if (!btn) return;
+            btn.textContent = 'Сними';
+            btn.classList.remove('edit-btn'); btn.classList.add('save-btn');
+            // ostavi handler da ponovo pozove saveWeek sa data-child iz dugmeta
+            btn.onclick = () => {
+                const child = btn.dataset.child || /*[[${selectedChildId}]]*/ 0;
+                saveWeek(child, parseInt(weekIndex, 10));
+            };
+        }
+
+        /* Inicijalno vezivanje dugmadi i keyboard ponašanje */
+        window.addEventListener('load', () => {
+            // bind save buttons
+            document.querySelectorAll('button[data-save-week]').forEach(btn => {
+                // osiguraj da dugme ima data-child; ako nema, postavi default selectedChildId
+                if (!btn.dataset.child) btn.dataset.child = /*[[${selectedChildId}]]*/ 0;
+                btn.onclick = () => {
+                    const child = btn.dataset.child;
+                    const idx = parseInt(btn.dataset.saveWeek, 10);
+                    saveWeek(child, idx);
+                };
+            });
+
+            // keyboard: Tab i Enter ponašanje — vertikalno po koloni
+            // delegiramo na container tabele
+            const table = document.querySelector('.matrix');
+            if (!table) return;
+
+            table.addEventListener('keydown', (ev) => {
+                const target = ev.target;
+                if (!(target instanceof HTMLInputElement) || target.getAttribute('type') !== 'number') return;
+
+                if (ev.key === 'Tab' || ev.key === 'Enter') {
+                    // spreči default Tab prelazak horizontalno
+                    ev.preventDefault();
+
+                    const week = target.getAttribute('data-week');
+                    if (!week) return;
+
+                    // sve inpute u istoj koloni (iste nedelje) — redosled u DOM
+                    const colInputs = Array.from(document.querySelectorAll(`input[type="number"][data-week="${week}"]`));
+                    const idx = colInputs.indexOf(target);
+                    if (idx === -1) return;
+
+                    // smer: Shift+Tab ide gore, Tab/Enter ide dole
+                    const forward = !ev.shiftKey;
+                    let nextIdx = forward ? idx + 1 : idx - 1;
+
+                    // ako dođemo do ivice: wrap ili fokusiraj prvo/poslednje po želji
+                    if (nextIdx < 0) nextIdx = 0;
+                    if (nextIdx >= colInputs.length) nextIdx = colInputs.length - 1;
+
+                    // fokus na sledeći input i select text (ako hoćeš)
+                    const next = colInputs[nextIdx];
+                    if (next) {
+                        next.focus();
+                        next.select && next.select();
+                    }
+                }
+            });
+
+            // pokreni početne proračune
+            if (typeof updateSubtotals === 'function') updateSubtotals();
+        });
+
+        /* Očekuje se da u HTML-u svako dugme ima: data-save-week i data-child (selectedChildId).
+           Primer dugmeta u HTML:
+           <button type="button" data-save-week="${i}" data-child="${selectedChildId}" class="save-btn">Сними</button>
+        */
+    </script>
+
+
+</head>
+<body>
+<div class="main-container">
+
+    <!-- ⬆️ Избор детета -->
+    <form method="get" action="/web/index">
+        <div style="
+            margin-top:0.5rem;
+            margin-bottom:0.5rem;
+            padding:1rem;
+            background:#f0f4ff;
+            border:1px solid #ccc;
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            gap:1rem;
+            font-size:1.2rem;">
+            <label for="childId" style="font-weight:bold;">👤 Изабери дете:</label>
+            <select name="childId" id="childId" style="
+                font-size:1.1rem;
+                padding:0.4rem 0.6rem;
+                border-radius:6px;
+                border:1px solid #aaa;
+                background:white;">
+                <option th:each="child : ${children}"
+                        th:value="${child.id}"
+                        th:text="${child.name}"
+                        th:selected="${child.id == selectedChildId}">
+                </option>
+            </select>
+            <button type="submit" style="
+                font-size:1rem;
+                padding:0.5rem 1rem;
+                background:#001f4d;
+                color:white;
+                border:none;
+                border-radius:6px;
+                cursor:pointer;">Прикажи</button>
+        </div>
+    </form>
+
+    <!-- 📊 Основни подаци у три колоне -->
+    <div style="
+        margin:0.5rem 0;
+        background:#f0f4ff;
+        padding:1rem;
+        border:1px solid #ccc;
+        border-radius:8px;
+        display:flex;
+        justify-content:space-between;
+        flex-wrap:wrap;
+        gap:1rem;">
+        <!-- 💰 Тренутно стање -->
+        <div style="
+            flex:1;
+            min-width:220px;
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            text-align:center;">
+            <h2 style="margin:0; font-size:1.6rem;">💰 Тренутно стање</h2>
+            <p style="font-size:2rem; font-weight:bold; margin-top:0.5rem; margin-bottom:0;">
+                <span th:text="${(startingBalance ?: 0) + (totalAllowance ?: 0) + (totalRewards ?: 0) - (totalPenalties ?: 0) + (totalGifts ?: 0)} + ' дин.'"></span>
+            </p>
+        </div>
+
+        <!-- 📌 Финансијски оквир -->
+        <div style="flex:1; min-width:220px;">
+            <h3 style="margin-top:0;">📌 Финансијски оквир</h3>
+            <ul style="list-style:none; padding:0; font-size:1.1rem;">
+                <li>Недељни џепарац: <strong th:text="${allowanceBase} + ' дин.'"></strong></li>
+                <li>Почетно стање: <strong th:text="${startingBalance} + ' дин.'"></strong></li>
+                <li>Укупан џепарац: <strong th:text="${totalAllowance} + ' дин.'"></strong></li>
+            </ul>
+        </div>
+
+        <!-- 🎁 Подстицаји и корекције -->
+        <div style="flex:1; min-width:220px;">
+            <h3 style="margin-top:0;">🎁 Подстицаји и корекције</h3>
+            <ul style="list-style:none; padding:0; font-size:1.1rem;">
+                <li>Награде: <strong th:text="${totalRewards} + ' дин.'"></strong></li>
+                <li>Казне: <strong th:text="${totalPenalties} + ' дин.'"></strong></li>
+                <li>Поклони и бонуси: <strong th:text="${totalGifts} + ' дин.'"></strong></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 📅 Матрица оцена по активностима -->
+    <div class="matrix-wrapper">
+        <table class="matrix" style="
+            border-collapse:collapse;
+            font-size:0.8rem;
+            text-align:center;
+            width:max-content;
+            min-width:100%;">
+            <thead>
+            <tr style="background:#cceccc;">
+                <th style="border:1px solid #aaa;" class="col-activity">Активност</th>
+                <th style="border:1px solid #aaa;" class="col-desc">Опис</th>
+                <th style="border:1px solid #aaa;" class="col-max">Макс.</th>
+                <th th:each="weekNum : ${#numbers.sequence(1,52)}"
+                    th:text="'Н' + weekNum"
+                    style="border:1px solid #aaa; min-width:6rem;">
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <!-- 📘 Основне активности (lista redova) -->
+            <tr><td class="sec-header" colspan="55">📘 Основне активности</td></tr>
+            <tr th:each="row : ${osnovneAktivnosti}">
+                <td style="border:1px solid #aaa;" class="col-activity" th:text="${row.activity.name}">Активност</td>
+                <td style="border:1px solid #aaa;" class="col-desc" th:text="${row.activity.description}">Опис</td>
+                <td style="border:1px solid #aaa;" class="col-max" th:text="${row.activity.maxScore}">0</td>
+                <td th:each="score, iterStat : ${row.weeklyScores}" style="border:1px solid #aaa;">
+                    <input type="number" th:value="${score}" th:attr="data-week=${iterStat.index}, data-activity=${row.activity.id}, data-section='osnovne'" style="width:4rem;" />
+                </td>
+            </tr>
+            <tr class="coef-row">
+                <td class="col-activity" colspan="3">Коефицијент основних активности</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}" th:id="'subtotal-osnovne-' + i">0</td>
+            </tr>
+
+            <!-- 📗 Додатне активности -->
+            <tr><td class="sec-header" colspan="55">📗 Додатне активности</td></tr>
+            <tr th:each="row : ${dodatneAktivnosti}">
+                <td style="border:1px solid #aaa;" class="col-activity" th:text="${row.activity.name}">Активност</td>
+                <td style="border:1px solid #aaa;" class="col-desc" th:text="${row.activity.description}">Опис</td>
+                <td style="border:1px solid #aaa;" class="col-max" th:text="${row.activity.maxScore}">0</td>
+                <td th:each="score, iterStat : ${row.weeklyScores}" style="border:1px solid #aaa;">
+                    <input type="number" th:value="${score}" th:attr="data-week=${iterStat.index}, data-activity=${row.activity.id}, data-section='dodatne'" style="width:4rem;" />
+                </td>
+            </tr>
+            <tr class="coef-row">
+                <td class="col-activity" colspan="3">Коефицијент додатних активности</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}" th:id="'subtotal-dodatne-' + i">0</td>
+            </tr>
+
+            <!-- 📙 Тимски рад -->
+            <tr><td class="sec-header" colspan="55">📙 Тимски рад</td></tr>
+            <tr th:each="row : ${timovi}">
+                <td style="border:1px solid #aaa;" class="col-activity" th:text="${row.activity.name}">Активност</td>
+                <td style="border:1px solid #aaa;" class="col-desc" th:text="${row.activity.description}">Опис</td>
+                <td style="border:1px solid #aaa;" class="col-max" th:text="${row.activity.maxScore}">0</td>
+                <td th:each="score, iterStat : ${row.weeklyScores}" style="border:1px solid #aaa;">
+                    <input type="number" th:value="${score}" th:attr="data-week=${iterStat.index}, data-activity=${row.activity.id}, data-section='timovi'" style="width:4rem;" />
+                </td>
+            </tr>
+            <tr class="coef-row">
+                <td class="col-activity" colspan="3">Коефицијент тимског рада</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}" th:id="'subtotal-timovi-' + i">0</td>
+            </tr>
+
+            <!-- укупно, џепарац, сними -->
+            <tr class="total-row">
+                <td class="col-activity" colspan="3">Укупна недељна оцена</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}" th:id="'koef-' + i">0</td>
+            </tr>
+            <tr class="allow-row">
+                <td class="col-activity" colspan="3">Џепарац</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}" th:id="'dzep-' + i">0</td>
+            </tr>
+            <tr class="save-row">
+                <td class="col-activity" colspan="3">Сними</td>
+                <td th:each="i : ${#numbers.sequence(0,51)}">
+                    <button type="button"
+                            th:attr="data-save-week=${i}, data-child=${selectedChildId}"
+                            class="save-btn">Сними</button>
+                </td>
+            </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+</body>
+</html>
